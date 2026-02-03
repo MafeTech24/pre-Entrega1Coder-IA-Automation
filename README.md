@@ -1,0 +1,1 @@
+# pre-Entrega1Coder-IA-Automation
