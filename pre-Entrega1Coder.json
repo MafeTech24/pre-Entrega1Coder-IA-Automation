@@ -1,0 +1,349 @@
+{
+  "name": "pre-Entrega1Coder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "675c2c0a-5c87-488b-9cda-09b3103bae43",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://worldtimeapi.org/api/timezone/America/Argentina/Cordoba",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6a22f81d-6425-4f26-a390-cf8f7f68990f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56c11ff4-cce5-4d09-9125-d23c1935e74d",
+              "name": "datetime",
+              "value": "={{$json.datetime}}",
+              "type": "string"
+            },
+            {
+              "id": "398a5097-dfd9-4609-8b0f-f10942bf2d21",
+              "name": "hour",
+              "value": "={{ Number($json.datetime.slice(11,13)) }}",
+              "type": "string"
+            },
+            {
+              "id": "45621b0c-2876-42bd-8d0f-e9aa19356f1c",
+              "name": "isPM",
+              "value": "={{ Number($json.datetime.slice(11,13)) >= 12 }}",
+              "type": "boolean"
+            },
+            {
+              "id": "9ec7a275-9e26-4c12-92db-8ffa51bc0bc4",
+              "name": "dateKey",
+              "value": "={{ $json.datetime.slice(0,13) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "faf1f79d-faf2-4ec0-b190-c6e1559b1599",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fc886a6c-e181-4cbf-bfff-ec59a27c3f95",
+              "leftValue": "={{ $('Edit Fields').item.json.isPM }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ab947719-c942-4a04-b36c-a8ad6eddff92",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        0
+      ],
+      "id": "cd85d1be-3644-44ef-8e15-1b3483dd57f8",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1TQgi1RzHAhXJJv9NsEYF7-3hWeAnl1RJukHA2Ecu6U8/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "sheet/tab",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TQgi1RzHAhXJJv9NsEYF7-3hWeAnl1RJukHA2Ecu6U8/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "dateKey",
+              "lookupValue": "={{ $('Edit Fields').item.json.dateKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        0
+      ],
+      "id": "57e7f7ff-3823-4d9d-97ff-5ceca8d5f835",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "enhIhlJivjvpbZiD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "dulceybelladist@gmail.com",
+        "subject": "=Alerta n8n: PM en Córdoba ({{$json.hour}}h)",
+        "message": "=Alerta n8n\ndatetime: {{$json.datetime}} hour: {{$json.hour}} dateKey: {{$json.dateKey}} sentAt: {{$now}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "4eb9ea60-816d-4076-915d-d391fd07bd48",
+      "name": "Send a message",
+      "webhookId": "f44a8d79-bcb5-4ca1-b6db-1186cb3a4cbd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mg3pLfQB853x1mUN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1TQgi1RzHAhXJJv9NsEYF7-3hWeAnl1RJukHA2Ecu6U8/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "sheet/tab",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TQgi1RzHAhXJJv9NsEYF7-3hWeAnl1RJukHA2Ecu6U8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hour": "={{ $('Edit Fields').item.json.hour }}",
+            "dateKey": "={{ $('Edit Fields').item.json.dateKey }}",
+            "datetime": "={{ $('Edit Fields').item.json.datetime }}",
+            " sentAt": "={{$now.toISO()}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "dateKey",
+              "displayName": "dateKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "datetime",
+              "displayName": "datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hour",
+              "displayName": "hour",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " sentAt",
+              "displayName": " sentAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        -96
+      ],
+      "id": "099bc4b8-7553-4d3b-9c88-348812357895",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "enhIhlJivjvpbZiD",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "18e516d0-f8ae-4d69-88f2-6d55c3644647",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a4a1d691328bb1d2a46d62246b04bc6852d1a961de764517ef509b9f4c5ea02"
+  },
+  "id": "cyb7sLSXEV_xL-Cxx3FZd",
+  "tags": []
+}
